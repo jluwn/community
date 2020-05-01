@@ -2,6 +2,9 @@ package life.ning.community.service;
 
 import life.ning.community.dto.PaginationDTO;
 import life.ning.community.dto.QuestionDTO;
+import life.ning.community.exception.CustomizeErrorCode;
+import life.ning.community.exception.CustomizeException;
+import life.ning.community.mapper.QuestionExtMapper;
 import life.ning.community.mapper.QuestionMapper;
 import life.ning.community.mapper.UserMapper;
 import life.ning.community.model.Question;
@@ -20,6 +23,8 @@ public class QuestionService {
 
     @Autowired
     private QuestionMapper questionMapper;
+    @Autowired
+    private QuestionExtMapper questionExtMapper;
     @Autowired
     private UserMapper userMapper;
     public PaginationDTO list(Integer page, Integer size) {
@@ -99,6 +104,9 @@ public class QuestionService {
 
     public QuestionDTO getById(Integer id) {
         Question question = questionMapper.selectByPrimaryKey(id);
+        if (question == null) {
+            throw new CustomizeException(CustomizeErrorCode.QUESTION_NOT_FOUND);
+        }
         QuestionDTO questionDTO = new QuestionDTO();
         BeanUtils.copyProperties(question,questionDTO);
         User user = userMapper.selectByPrimaryKey(question.getCreator());
@@ -111,7 +119,7 @@ public class QuestionService {
             //创建
             question.setGmtCreate(System.currentTimeMillis());
             question.setGmtModified(question.getGmtCreate());
-            questionMapper.insert(question);
+            questionMapper.insertSelective(question);//这里原视频用的是insert，经查资料得出insert有时会自动将默认值改为null，故改为insertSelective
         }else {
             //更新
             Question updateQuestion = new Question();
@@ -121,8 +129,21 @@ public class QuestionService {
             updateQuestion.setTag(question.getTag());
             QuestionExample example = new QuestionExample();
             example.createCriteria().andIdEqualTo(question.getId());
-            questionMapper.updateByExampleSelective(updateQuestion, example);
+            int updated=questionMapper.updateByExampleSelective(updateQuestion, example);
+            if(updated!=1){
+                throw new CustomizeException(CustomizeErrorCode.QUESTION_NOT_FOUND);
+            }
 
         }
+    }
+
+    public void incView(Integer id) {
+
+
+        Question question = new Question();
+        question.setId(id);
+        question.setViewCount(1);
+        questionExtMapper.incView(question);
+
     }
 }
