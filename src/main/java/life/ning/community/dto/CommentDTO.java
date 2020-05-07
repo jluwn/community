@@ -1,5 +1,6 @@
 package life.ning.community.dto;
 
+import life.ning.community.model.User;
 import lombok.Data;
 
 @Data
@@ -14,8 +15,7 @@ public class CommentDTO {
     private Long likeCount;
     private Integer commentCount;
     private String content;
-
-
+    private User user;
 
 
 }
