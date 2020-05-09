@@ -122,9 +122,10 @@ function selectTag(e) {
     var previous = $("#tag").val();
     if (previous.indexOf(value) == -1) {
         if (previous) {
-            $("#tag").val(previous + ',' + value);
+            $("#tag").val(previous + '，' + value);
         } else {
             $("#tag").val(value);
         }
     }
 }
+
